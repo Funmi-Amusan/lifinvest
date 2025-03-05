@@ -1,27 +1,33 @@
 import React from 'react';
 import {StockChartData} from '../../store/slices//types'
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, TooltipProps } from 'recharts';
 
 interface StockChartProps {
   data: StockChartData[];
-  symbol: string;
 }
 
-
-
-const StockChart: React.FC<StockChartProps> = ({ data, symbol }) => {
-  if (!data.length) {
-    return <div className="no-chart-data">No chart data available</div>;
+const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className=" bg-white p-2 shadow-2xl">
+        <div className=' flex flex-row gap-2 items-center'>
+<div className=' bg-[#00d678] h-2 w-2 rounded-full'></div>
+        <p className="">{new Date(label).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+        </div>
+        <p className="">Price: {payload[0].value}</p>
+      </div>
+    );
   }
 
-
-  console.log("data===========", data);
+  return null;
+};
+const StockChart: React.FC<StockChartProps> = ({ data }) => {
 
   return (
     <div>
-      <h3>{symbol} Price History</h3>
+        {data.length > 0 ? (
       <div>
-        <ResponsiveContainer width="100%" height={400}>
+        <ResponsiveContainer width="100%" height={300}>
           <LineChart data={data}>
             <XAxis 
               dataKey="time" 
@@ -37,17 +43,21 @@ const StockChart: React.FC<StockChartProps> = ({ data, symbol }) => {
               tickFormatter={(value) => `$${value}`}
               dataKey={'price'}
             />
-            <Tooltip  />
+         <Tooltip content={<CustomTooltip />} />
             <Line 
-              type="natural" 
+              type="monotone" 
               dataKey="price" 
-              stroke="#4285F4" 
+              stroke="#00d678" 
               dot={false}
               strokeWidth={2}
             />
           </LineChart>
         </ResponsiveContainer>
       </div>
+        ):(
+            <div className="no-chart-data">No Stock Chart Data Available</div>
+        )
+        }
     </div>
   );
 };
