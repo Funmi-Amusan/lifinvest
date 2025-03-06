@@ -3,7 +3,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import http from '../../utils/https';
 
 // const alphaApiKey = process.env.REACT_APP_ALPHA_API_KEY;
-const alphaApiKey = '3NMNXAVYY6DFQBXJ';
+const alphaApiKey = 'XKLOC9AJUP49NL1Y';
 
 type InitialState = {
     loading: boolean;
@@ -18,6 +18,22 @@ const initialState: InitialState = {
     message: null,
     stockDetail: null,
 }
+
+export const fetchTickersByKeyword = createAsyncThunk(
+    "fetchTickers",
+    async (keywords: string, { rejectWithValue }) => {
+        try {
+            const response = await http.get({ url: `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${keywords}&apikey=${alphaApiKey}` });
+            console.log("response===========", response);
+            return response;
+        } catch (err: any) {
+            if (!err.response) {
+                throw err;
+            }
+            return rejectWithValue(err.response.data);
+        }
+    }
+);
 
 export const fetchStockFromAlhpa = createAsyncThunk(
     "fetchAllStockFromAlhpa",

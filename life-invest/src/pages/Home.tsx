@@ -4,6 +4,7 @@ import { fetchStockFromAlhpa } from "../../store/slices/stockSlice";
 import { RootState } from "../../store";
 import {sampleData} from "../../utils/data.ts"; 
 import StockChart from "../components/StockChart.tsx";
+import SearchInput from "../components/SearchInput.tsx";
 const Home = () => {
   const { stockDetail } = useSelector((state: RootState) => state.stockReducer);
   const dispatch = useDispatch();
@@ -40,21 +41,27 @@ const Home = () => {
   
   const stockChartData = [];
   for (const [key, value] of Object.entries(sampleData['Time Series (Daily)'])) {
-                                const time = new Date(key).getTime()
-                                const price = Number(value['4. close'])
-                                stockChartData.push({time, price})
-                            }
+      const time = new Date(key).getTime()
+      const price = Number(value['4. close'])
+      stockChartData.push({time, price})
+    }
+
+    const handleSetTicker = (ticker: string) => {
+      setSymbol(ticker);
+    }
+
+    console.log("ticker", symbol);
   
   return (
     <div >
       <header className="h-10 bg-black/10">
-
       </header>
       
       <main className="main-content">
         
         <section className="content">
           {/* add search input */}
+          <SearchInput onSelectStock={(ticker: string) => handleSetTicker(ticker)} />
 {/* info about the company of the symbol? */}
             <div className="stock-chart">
               {/* stock chart */}
