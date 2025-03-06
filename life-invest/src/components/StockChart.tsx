@@ -27,7 +27,7 @@ const StockChart: React.FC<StockChartProps> = ({ data }) => {
     <div>
         {data.length > 0 ? (
       <div>
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={400}>
           <LineChart data={data}>
             <XAxis 
               dataKey="time" 
