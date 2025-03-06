@@ -767,3 +767,18 @@ export const stocks = [
     "9. matchScore": "0.5455"
   }
 ]
+
+export const StockQuote = {
+  "Global Quote": {
+    "01. symbol": "IBM",
+    "02. open": "251.5800",
+    "03. high": "252.7400",
+    "04. low": "247.0146",
+    "05. price": "251.3500",
+    "06. volume": "4009813",
+    "07. latest trading day": "2025-03-05",
+    "08. previous close": "253.2100",
+    "09. change": "-1.8600",
+    "10. change percent": "-0.7346%"
+  }
+}

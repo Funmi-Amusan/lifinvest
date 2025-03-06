@@ -2,11 +2,11 @@ import { useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux";
 import { fetchStockFromAlhpa } from "../../store/slices/stockSlice";
 import { RootState } from "../../store";
-import {sampleData} from "../../utils/data.ts"; 
+import {sampleData, StockQuote} from "../../utils/data.ts"; 
 import StockChart from "../components/StockChart.tsx";
 import SearchInput from "../components/SearchInput.tsx";
 const Home = () => {
-  const { stockDetail } = useSelector((state: RootState) => state.stockReducer);
+  const {  stockQuote } = useSelector((state: RootState) => state.stockReducer);
   const dispatch = useDispatch();
   const [loading, setLoading] = useState<boolean>(true);
   const [symbol, setSymbol] = useState<string>("");
@@ -19,7 +19,6 @@ const Home = () => {
         setLoading(false);
         return;
       }
-
       setLoading(true);
       setError(null);
       try {
@@ -53,26 +52,49 @@ const Home = () => {
     console.log("ticker", symbol);
   
   return (
-    <div >
-      <header className="h-10 bg-black/10">
+    <body  >
+      <header className=" px-10 py-4 bg-black/10">
+      <div className="w-full flex justify-between items-center">
+            <div>
+              <h1 className="text-xl font-semibold">Hello Guest</h1>
+            </div>
+          <SearchInput onSelectStock={(ticker: string) => handleSetTicker(ticker)} />
+          </div>
       </header>
       
-      <main className="main-content">
+      <main className=" m-10">
         
-        <section className="content">
-          {/* add search input */}
-          <SearchInput onSelectStock={(ticker: string) => handleSetTicker(ticker)} />
-{/* info about the company of the symbol? */}
+        <section className="items-center">
+          <div className="flex flex-col p-4 text-2xl text-center py-6">
+        <p>{StockQuote["Global Quote"]["01. symbol"]} Stocks</p>
+          </div>
             <div className="stock-chart">
-              {/* stock chart */}
                 <StockChart 
                   data={stockChartData} 
                   symbol={sampleData['Meta Data']['2. Symbol']}
                 />
             </div>
+            <div className=" grid grid-flow-col gap-4">
+              <div className="flex flex-col gap-4 bg-white p-4 w-fit">
+                <p className=" text-sm text-zinc-500 font-normal">Open</p>
+                <p className=" text-md text-black font-normal">{StockQuote["Global Quote"]['02. open']}</p>
+              </div>
+              <div className="flex flex-col gap-4 bg-white p-4 w-fit">
+                <p className=" text-sm text-zinc-500 font-normal">High</p>
+                <p className=" text-md text-black font-normal">{StockQuote["Global Quote"]['03. high']}</p>
+              </div>
+              <div className="flex flex-col gap-4 bg-white p-4 w-fit">
+                <p className=" text-sm text-zinc-500 font-normal">Low</p>
+                <p className=" text-md text-black font-normal">{StockQuote["Global Quote"]['04. low']}</p>
+              </div>
+              <div className="flex flex-col gap-4 bg-white p-4 w-fit">
+                <p className=" text-sm text-zinc-500 font-normal">Open</p>
+                <p className=" text-md text-black font-normal">{StockQuote["Global Quote"]['05. price']}</p>
+              </div>
+            </div>
         </section>
       </main>
-    </div>
+    </body>
   )
 }
 

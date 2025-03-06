@@ -5,13 +5,14 @@ import Autocomplete from '@mui/material/Autocomplete';
 import { fetchTickersByKeyword } from '../../store/slices/stockSlice';
 import { useDispatch } from 'react-redux';
 import debounce from 'lodash.debounce';
+import { stocks } from '../../utils/data';
 
 interface StockOption {
   '1. symbol': string;
   '2. name': string;
 }
 
-const SearchInput = ({ onSelectStock }) => {
+const SearchInput = ({ onSelectStock }: { onSelectStock: (symbol: string) => void }) => {
   const [keyword, setKeyword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [options, setOptions] = useState<StockOption[]>([]);
@@ -27,17 +28,14 @@ const SearchInput = ({ onSelectStock }) => {
       setLoading(true);
       try {
         const response = await dispatch(fetchTickersByKeyword(searchKeyword) as any);
-        console.log(response.payload);
         if (response.payload && Array.isArray(response.payload)) {
           setOptions(response.payload);
-          console.log(response.payload);
         }
       } catch (err) {
         console.error("Error fetching stock data:", err);
         setLoading(false);
       } 
     };
-
     debounce(search, 300)();
   }, [dispatch]);
 
@@ -48,35 +46,53 @@ const SearchInput = ({ onSelectStock }) => {
   return (
     <Autocomplete
       id="stock-search-select"
-      sx={{ width: 300 }}
-      options={options}
+      sx={{ 
+        width: 300,
+        '& .MuiOutlinedInput-root': {
+          borderRadius: '30px',
+          height: '40px'
+        },
+        '& .MuiOutlinedInput-notchedOutline': {
+          borderWidth: '1px'
+        },
+        '& .MuiInputBase-input': {
+          padding: '8px 14px'
+        },
+        '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+          borderColor: 'inherit',
+          borderWidth: '1px',
+          boxShadow: 'none'
+        },
+        '& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline': {
+          borderColor: 'inherit'
+        }
+      }}
+      options={stocks}
       loading={loading}
-      autoHighlight
       inputValue={keyword}
       onInputChange={(event, value) => {
         setKeyword(value);
       }}
       onChange={(event, value) => {
-        console.log("selected", value);
         if (value) {
           onSelectStock(value['1. symbol']);
         }
       }}
-      getOptionLabel={(option) => `${option['1. symbol']} (${option['2. name']})`}
       renderOption={(props, option) => (
         <Box
           component="li"
-          sx={{ '& > img': { mr: 2, flexShrink: 0 } }}
           {...props}
         >
+          <div>
           <strong>{option['1. symbol']}</strong> - {option['2. name']}
+          </div>
         </Box>
       )}
       renderInput={(params) => (
         <TextField
           {...params}
-          label="Search stock"
           placeholder="Search Stock"
+          className=' py-0 rounded-full'
         />
       )}
       noOptionsText="No stocks found"
