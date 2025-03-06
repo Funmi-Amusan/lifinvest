@@ -49,7 +49,7 @@ const SearchInput = ({ onSelectStock }: { onSelectStock: (symbol: string) => voi
       sx={{ 
         width: 300,
         '& .MuiOutlinedInput-root': {
-          borderRadius: '30px',
+          borderRadius: '10px',
           height: '40px'
         },
         '& .MuiOutlinedInput-notchedOutline': {
@@ -92,7 +92,6 @@ const SearchInput = ({ onSelectStock }: { onSelectStock: (symbol: string) => voi
         <TextField
           {...params}
           placeholder="Search Stock"
-          className=' py-0 rounded-full'
         />
       )}
       noOptionsText="No stocks found"
