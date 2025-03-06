@@ -5,17 +5,13 @@ import Autocomplete from '@mui/material/Autocomplete';
 import { fetchTickersByKeyword } from '../../store/slices/stockSlice';
 import { useDispatch } from 'react-redux';
 import debounce from 'lodash.debounce';
-import { stocks } from '../../utils/data';
+import { Ticker } from '../../store/slices/types';
+import { Typography } from '@mui/material';
 
-interface StockOption {
-  '1. symbol': string;
-  '2. name': string;
-}
-
-const SearchInput = ({ onSelectStock }: { onSelectStock: (symbol: string) => void }) => {
+const SearchInput = ({ onSelectStock }: { onSelectStock: (symbol: Ticker) => void }) => {
   const [keyword, setKeyword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
-  const [options, setOptions] = useState<StockOption[]>([]);
+  const [options, setOptions] = useState<Ticker[]>([]);
   const dispatch = useDispatch();
 
   const debouncedSearch = useCallback((searchKeyword: string) => {
@@ -47,7 +43,7 @@ const SearchInput = ({ onSelectStock }: { onSelectStock: (symbol: string) => voi
     <Autocomplete
       id="stock-search-select"
       sx={{ 
-        width: 300,
+        width: 500,
         '& .MuiOutlinedInput-root': {
           borderRadius: '10px',
           height: '40px'
@@ -67,15 +63,17 @@ const SearchInput = ({ onSelectStock }: { onSelectStock: (symbol: string) => voi
           borderColor: 'inherit'
         }
       }}
-      options={stocks}
+      options={options}
       loading={loading}
       inputValue={keyword}
+      getOptionLabel={(option) => `${option['1. symbol']} - ${option['2. name']}`}
       onInputChange={(event, value) => {
         setKeyword(value);
       }}
       onChange={(event, value) => {
         if (value) {
-          onSelectStock(value['1. symbol']);
+          console.log(value);
+          onSelectStock(value);
         }
       }}
       renderOption={(props, option) => (
@@ -83,9 +81,28 @@ const SearchInput = ({ onSelectStock }: { onSelectStock: (symbol: string) => voi
           component="li"
           {...props}
         >
-          <div>
-          <strong>{option['1. symbol']}</strong> - {option['2. name']}
-          </div>
+           <Typography
+      variant="body1"
+      sx={{
+        display: 'flex',
+        flexDirection: 'row',
+        rowGap: '8px',
+        alignItems: 'center',
+        padding: '8px 16px',
+        width: '100%'
+      }}
+    >
+      {option['1. symbol']}
+    </Typography>
+    <Typography
+      variant="body2"
+      sx={{
+        color: '#666',
+        fontSize: '0.85rem'
+      }}
+    >
+      {option['2. name']}
+    </Typography>
         </Box>
       )}
       renderInput={(params) => (

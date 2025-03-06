@@ -1,56 +1,59 @@
 import { useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux";
-import { fetchStockFromAlhpa } from "../../store/slices/stockSlice";
+import { fetchStockFromAlhpa, fetchStockQuote } from "../../store/slices/stockSlice";
 import { RootState } from "../../store";
 import StockChart from "../components/StockChart.tsx";
 import SearchInput from "../components/SearchInput.tsx";
 import StockDetails from "../components/StockDetails.tsx";
-import { StockChartData } from "../../store/slices/types.ts";
+import { Ticker } from "../../store/slices/types.ts";
 const Home = () => {
-  const {  stockQuote } = useSelector((state: RootState) => state.stockReducer);
+  const { stockQuote, stockChartInfo } = useSelector((state: RootState) => state.stockReducer);
   const dispatch = useDispatch();
   const [loading, setLoading] = useState<boolean>(true);
-  const [symbol, setSymbol] = useState<string>("");
-  const [stockData, setStockData] = useState<StockChartData[]>([]);
+  const [symbol, setSymbol] = useState<Ticker>();
   const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
     const fetchStockData = async () => {
-      if (!symbol) {
-        setLoading(false);
-        return;
-      }
+      // if (!symbol) {
+      //   setLoading(false);
+      //   return;
+      // }
       setLoading(true);
       setError(null);
       try {
-        const response = await dispatch(fetchStockFromAlhpa(symbol) as any);
-        if (response.data) {
-          setStockData(response.data);
+        const stockDataRes = await dispatch(fetchStockFromAlhpa("IBM") as any);
+        const quote = await dispatch(fetchStockQuote("IBM") as any);
+        if (stockDataRes.data && quote) {
+          // show success toast?
         } else {
-          setError(response.error);
-          setStockData([]);
+          //show error toast
         }
+        setLoading(false);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
-        setStockData([]);
+        setLoading(false);
       } 
     };
 
     fetchStockData();
-  }, [symbol, dispatch]);
+  }, [symbol]);
   
-    const handleSetTicker = (ticker: string) => {
+    const handleSetTicker = (ticker: Ticker) => {
       setSymbol(ticker);
     }
+
+    console.log("stock data", stockChartInfo?.data);
   
   return (
+  
     <body className=" bg-[#F4F5F9] h-screen" >
       <header className=" px-10 py-4 bg-white">
       <div className="w-full flex justify-between items-center">
             <div>
               <h1 className="text-xl font-semibold">Hello Guest</h1>
             </div>
-          <SearchInput onSelectStock={(ticker: string) => handleSetTicker(ticker)} />
+          <SearchInput onSelectStock={(ticker: Ticker) => handleSetTicker(ticker)} />
           </div>
       </header>
       
@@ -59,15 +62,14 @@ const Home = () => {
           <p>Loading...</p>
         ) : error ? (
           <p>Error: {error}</p>
-        ) : stockData ? (
+        ) : stockChartInfo ? (
           <section className=" grid grid-cols-4 gap-6 items-center ">
             <div className="stock-chart col-span-3 bg-white rounded-xl shadow-lg p-4">
           <div className="flex flex-col p-4 pb-6">
-        <p className=" text-2xl font-semibold ">{stockQuote["Global Quote"]["01. symbol"]}</p>
+        <p className=" text-2xl font-semibold ">{ stockQuote && stockQuote["Global Quote"]["01. symbol"]}</p>
           </div>
                 <StockChart 
-                  data={stockData} 
-                  symbol={stockData['Meta Data']['2. Symbol']}
+                  data={stockChartInfo?.data} 
                 />
             </div>
             {stockQuote && 

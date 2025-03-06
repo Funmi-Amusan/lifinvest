@@ -1,20 +1,20 @@
 
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import http from '../../utils/https';
-import { CachedStockChartData, InitialState, StockChartData, StockDataType } from "./types";
+import { stockChartInfo, InitialState, StockChartData } from "./types";
 
-const alphaApiKey = process.env.REACT_APP_ALPHA_API_KEY;
-
+const alphaApiKey = import.meta.env.VITE_ALPHA_API_KEY;
 
 const initialState: InitialState = {
     loading: false,
     error: false,
     message: null,
-    stockChartData: [],
+    stockChartInfo: null,
     stockQuote: null,
+    tickers: []
 }
 
-const stockCache: { [key: string]: CachedStockChartData } = {};
+const stockCache: { [key: string]: stockChartInfo } = {};
 const cacheExpiryTime = 5 * 60 * 1000
 
 
@@ -23,13 +23,12 @@ export const fetchTickersByKeyword = createAsyncThunk(
     async (keywords: string, { rejectWithValue }) => {
         try {
             const response = await http.get({ url: `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${keywords}&apikey=${alphaApiKey}` });
-            console.log("response===========", response);
-            return response;
-        } catch (err: any) {
-            if (!err.response) {
-                throw err;
+            return response.bestMatches;
+        } catch (err: unknown) {
+            if (err instanceof Error && 'response' in err) {
+                return rejectWithValue((err as { response: { data: unknown } }).response.data);
             }
-            return rejectWithValue(err.response.data);
+            throw err;
         }
     }
 );
@@ -43,14 +42,11 @@ export const fetchStockFromAlhpa = createAsyncThunk(
                 stockCache[ticker] &&
                 now - stockCache[ticker].timestamp < cacheExpiryTime
             ) {
-                console.log("Cache hit for ticker:", ticker);
                 return stockCache[ticker];
             }
             const response = await http.get({ url: `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${ticker}&datatype=json&apikey=${alphaApiKey}` });
-
-
             const stockChartData: StockChartData[] = [];
-            for (const [key, value] of Object.entries(response.payload['Time Series (Daily)'])) {
+            for (const [key, value] of Object.entries(response['Time Series (Daily)'])) {
                 if (value !== null && typeof value === 'object') {
                     const time = new Date(key).getTime()
                     const open = Number((value as Record<string, string>)['1. open'])
@@ -61,15 +57,13 @@ export const fetchStockFromAlhpa = createAsyncThunk(
                     stockChartData.push({ time, open, high, low, close, volume });
                 }
             }
-
-            stockCache[ticker] = { data: response, timestamp: now };
-
-            return response;
-        } catch (err: any) {
-            if (!err.response) {
-                throw err;
+            stockCache[ticker] = { data: stockChartData, metaData: response['Meta Data'], timestamp: now };
+            return { data: stockChartData, metaData: response['Meta Data'], timestamp: now };
+        } catch (err: unknown) {
+            if (err instanceof Error && 'response' in err) {
+                return rejectWithValue((err as { response: { data: unknown } }).response.data);
             }
-            return rejectWithValue(err.response.data);
+            throw err;
         }
     });
 
@@ -78,13 +72,12 @@ export const fetchStockQuote = createAsyncThunk(
     async (ticker: string, { rejectWithValue }) => {
         try {
             const response = await http.get({ url: `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${ticker}&apikey=${alphaApiKey}` });
-            console.log("response===========", response);
             return response;
-        } catch (err: any) {
-            if (!err.response) {
-                throw err;
+        } catch (err: unknown) {
+            if (err instanceof Error && 'response' in err) {
+                return rejectWithValue((err as { response: { data: unknown } }).response.data);
             }
-            return rejectWithValue(err.response.data);
+            throw err;
         }
     }
 );
@@ -104,15 +97,15 @@ const stockSlice = createSlice({
             fetchStockFromAlhpa.fulfilled,
             (state, action: PayloadAction<any>) => {
                 state.loading = false;
-                state.stockChartData = action.payload;
+                state.stockChartInfo = action.payload;
                 state.error = false;
             }
         );
         builder.addCase(
             fetchStockFromAlhpa.rejected,
-            (state, action: PayloadAction<any>) => {
+            (state) => {
                 state.loading = false;
-                state.stockChartData = [];
+                state.stockChartInfo = null;
                 state.error = true;
             });
 
@@ -130,12 +123,33 @@ const stockSlice = createSlice({
         );
         builder.addCase(
             fetchStockQuote.rejected,
-            (state, action: PayloadAction<unknown>) => {
+            (state) => {
                 state.loading = false;
                 state.stockQuote = null;
                 state.error = true;
             });
+
+        //Fetch a stock tickers
+        builder.addCase(fetchTickersByKeyword.pending, (state) => {
+            state.loading = true;
+        });
+        builder.addCase(
+            fetchTickersByKeyword.fulfilled,
+            (state, action: PayloadAction<any>) => {
+                state.loading = false;
+                state.tickers = action.payload;
+                state.error = false;
+            }
+        );
+        builder.addCase(
+            fetchTickersByKeyword.rejected,
+            (state) => {
+                state.loading = false;
+                state.tickers = [];
+                state.error = true;
+            });
     }
+
 });
 
 export default stockSlice.reducer;
