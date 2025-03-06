@@ -1,10 +1,10 @@
 
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import http from '../../utils/https';
-import { CachedStockChartData, InitialState } from "./types";
+import { CachedStockChartData, InitialState, StockChartData, StockDataType } from "./types";
 
-// const alphaApiKey = process.env.REACT_APP_ALPHA_API_KEY;
-const alphaApiKey = 'XKLOC9AJUP49NL1Y';
+const alphaApiKey = process.env.REACT_APP_ALPHA_API_KEY;
+
 
 const initialState: InitialState = {
     loading: false,
@@ -47,13 +47,19 @@ export const fetchStockFromAlhpa = createAsyncThunk(
                 return stockCache[ticker];
             }
             const response = await http.get({ url: `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${ticker}&datatype=json&apikey=${alphaApiKey}` });
-            console.log("response===========", response);
 
-            const stockChartData = [];
+
+            const stockChartData: StockChartData[] = [];
             for (const [key, value] of Object.entries(response.payload['Time Series (Daily)'])) {
-                const time = new Date(key).getTime()
-                const price = Number(value['4. close'])
-                stockChartData.push({ time, price })
+                if (value !== null && typeof value === 'object') {
+                    const time = new Date(key).getTime()
+                    const open = Number((value as Record<string, string>)['1. open'])
+                    const high = Number((value as Record<string, string>)['2. high'])
+                    const low = Number((value as Record<string, string>)['3. low'])
+                    const close = Number((value as Record<string, string>)['4. close'])
+                    const volume = Number((value as Record<string, string>)['5. volume'])
+                    stockChartData.push({ time, open, high, low, close, volume });
+                }
             }
 
             stockCache[ticker] = { data: response, timestamp: now };
@@ -65,8 +71,7 @@ export const fetchStockFromAlhpa = createAsyncThunk(
             }
             return rejectWithValue(err.response.data);
         }
-    }
-);
+    });
 
 export const fetchStockQuote = createAsyncThunk(
     "fetchStockQuote",

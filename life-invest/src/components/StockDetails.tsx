@@ -1,9 +1,8 @@
 import { StockQuoteType } from '../../store/slices/types'
 
 const StockDetails = ({StockQuote}: {StockQuote: StockQuoteType}) => {
-  console.log(StockQuote)
   return (
-      <div className=" col-span-1 h-full bg-white rounded-xl shadow-lg p-4 ">
+      <div className=" col-span-1 h-fit bg-white rounded-xl shadow-lg p-4 ">
                   <div className=" flex justify-between items-center">
                   <h2 className=" font-bold">Details</h2>
                   <p className=" bg-[#F4F5F9] p-2 rounded-lg font-semibold">Today</p>

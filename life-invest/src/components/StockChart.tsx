@@ -1,6 +1,6 @@
 import React from 'react';
 import {StockChartData} from '../../store/slices//types'
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, TooltipProps } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, TooltipProps, CartesianGrid } from 'recharts';
 
 interface StockChartProps {
   data: StockChartData[];
@@ -23,7 +23,32 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
 };
 const StockChart: React.FC<StockChartProps> = ({ data }) => {
 
+  const [keyValue, setKeyValue] = React.useState('close');
+
+  const chartOptions = [
+    { key: 'open', label: 'Open' },
+    { key: 'low', label: 'Low' },
+    { key: 'high', label: 'High' },
+    { key: 'close', label: 'Close' }
+  ];
   return (
+    <div>
+ <div className="flex justify-end rounded-lg mb-6 gap-2  px-4 py-2 bg-[#F4F5F9] w-fit">
+        {chartOptions.map((option) => (
+          <button
+            key={option.key}
+            onClick={() => setKeyValue(option.key)}
+            className={`p-1  rounded-md transition-colors text-black text-sm font-semibold ${
+              keyValue === option.key
+                ? 'bg-green-500 text-white'
+                : 'bg-[#F4F5F9] text-gray-700 hover:bg-gray-100'
+            }`}
+            type="button"
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
     <div>
         {data.length > 0 ? (
       <div>
@@ -41,12 +66,13 @@ const StockChart: React.FC<StockChartProps> = ({ data }) => {
               domain={['auto', 'auto']}
               tick={{ fontSize: 12 }}
               tickFormatter={(value) => `$${value}`}
-              dataKey={'price'}
+              dataKey={'close'}
             />
+            <CartesianGrid strokeDasharray="3 3" />
          <Tooltip content={<CustomTooltip />} />
             <Line 
               type="monotone" 
-              dataKey="price" 
+              dataKey={keyValue} 
               stroke="#00d678" 
               dot={false}
               strokeWidth={2}
@@ -58,6 +84,7 @@ const StockChart: React.FC<StockChartProps> = ({ data }) => {
             <div className="no-chart-data">No Stock Chart Data Available</div>
         )
         }
+    </div>
     </div>
   );
 };

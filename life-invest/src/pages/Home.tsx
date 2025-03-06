@@ -2,16 +2,16 @@ import { useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux";
 import { fetchStockFromAlhpa } from "../../store/slices/stockSlice";
 import { RootState } from "../../store";
-import {sampleData, StockQuote} from "../../utils/data.ts"; 
 import StockChart from "../components/StockChart.tsx";
 import SearchInput from "../components/SearchInput.tsx";
 import StockDetails from "../components/StockDetails.tsx";
+import { StockChartData } from "../../store/slices/types.ts";
 const Home = () => {
   const {  stockQuote } = useSelector((state: RootState) => state.stockReducer);
   const dispatch = useDispatch();
   const [loading, setLoading] = useState<boolean>(true);
   const [symbol, setSymbol] = useState<string>("");
-  const [stockData, setStockData] = useState(null);
+  const [stockData, setStockData] = useState<StockChartData[]>([]);
   const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
@@ -28,29 +28,20 @@ const Home = () => {
           setStockData(response.data);
         } else {
           setError(response.error);
-          setStockData(null);
+          setStockData([]);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
-        setStockData(null);
+        setStockData([]);
       } 
     };
 
     fetchStockData();
   }, [symbol, dispatch]);
   
-  const stockChartData = [];
-  for (const [key, value] of Object.entries(sampleData['Time Series (Daily)'])) {
-      const time = new Date(key).getTime()
-      const price = Number(value['4. close'])
-      stockChartData.push({time, price})
-    }
-
     const handleSetTicker = (ticker: string) => {
       setSymbol(ticker);
     }
-
-    console.log("ticker", symbol);
   
   return (
     <body className=" bg-[#F4F5F9] h-screen" >
@@ -64,21 +55,31 @@ const Home = () => {
       </header>
       
       <main className=" m-10">
-        
-        <section className=" grid grid-cols-4 gap-6 items-center ">
+        {loading ? (
+          <p>Loading...</p>
+        ) : error ? (
+          <p>Error: {error}</p>
+        ) : stockData ? (
+          <section className=" grid grid-cols-4 gap-6 items-center ">
             <div className="stock-chart col-span-3 bg-white rounded-xl shadow-lg p-4">
           <div className="flex flex-col p-4 pb-6">
-        <p className=" text-2xl font-semibold ">{StockQuote["Global Quote"]["01. symbol"]}</p>
+        <p className=" text-2xl font-semibold ">{stockQuote["Global Quote"]["01. symbol"]}</p>
           </div>
                 <StockChart 
-                  data={stockChartData} 
-                  symbol={sampleData['Meta Data']['2. Symbol']}
+                  data={stockData} 
+                  symbol={stockData['Meta Data']['2. Symbol']}
                 />
             </div>
-            {StockQuote && 
-            <StockDetails StockQuote={StockQuote}  />
+            {stockQuote && 
+            <StockDetails StockQuote={stockQuote}  />
             }
         </section>
+        ) : (
+          <p>No data available</p>
+        )}
+
+       
+       
       </main>
     </body>
   )
